@@ -26,12 +26,21 @@ class Client {
     }
 
     public function send($data) {
+        $need_recv = true;
+        if ($data['func_name'] == 'release') {
+            $need_recv = false;
+        }
         if (is_array($data)) {
             $data = json_encode($data);
         }
-        echo "Send data: {$data} \n";
+//        echo "Send data: {$data} \n";
         $rs = $this->client->send( $data );
-        $data = $this->client->recv();
+        if ($need_recv) {
+            $recv_data = $this->client->recv();
+            return $recv_data;
+        }
+
+        /*
         if (!$data) {
             for ($cnt = 0; $cnt < 1; $cnt++) {
                 $data = $this->client->recv();
@@ -39,13 +48,12 @@ class Client {
                     break;
                 }
             }
-            echo "receive faild! \n";
+//            //echo "receive faild! \n";
             return false;
         } else {
-            //echo "Client Recv data: ".var_dump($data)." \n";
-            echo "Client Recv data: ".$data." \n";
+//            //echo "Client Recv data: ".$data." \n";
         }
-        return $data;
+         */
     }
 
     public function isConnected() {
@@ -53,28 +61,4 @@ class Client {
     }
 }
 
-/*
-function test_client() {
-    $client = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_SYNC);
-    if (!$client->connect('127.0.0.1', 9500)) {
-        exit('client connect faild!');
-    }
-
-    for ($i = 0; $i < 5; $i++) {
-        $client->send(str_repeat($i,100));
-        $rs = $client->recv();
-        if ($rs === false) {
-            echo "recv faild \n";
-            break;
-        }
-        echo "recv[$i] ", $rs, " len:".strlen($rs)."\n";
-    }
-    $client->send("HELLO WORLD");
-    $data = $client->recv(9000,0);
-    var_dump($data);
-    $client->close();
-    unset($client);
-}
-test_client();
- */
  ?>

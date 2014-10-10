@@ -15,6 +15,9 @@ class DBServer
     protected $port;    //  server监听的端口
     protected $serv;
     private $map;       //  fd 和 task的对应关系
+    private $pdo;
+    private $table;
+
 
     function __construct(array $config) {
         $this->port = isset($config['port']) ? $config['port'] : 9500; // server监听的端口
@@ -24,16 +27,22 @@ class DBServer
         $this->db_pwd = isset($config['db_pwd']) ? $config['db_pwd'] : "";
         $this->db_name = isset($config['db_name']) ? $config['db_name'] : "test";
         $this->db_port = isset($config['db_port']) ? $config['db_port'] : 3306;
+
+        $this->table = new swoole_table(1024);
+        $this->table->column('worker_id',swoole_table::TYPE_INT, 4);
+        $this->table->create();
     }
 
     function run() {
         $this->serv = new swoole_server("127.0.0.1", $this->port);
         $this->serv->set( array(
-            'worker_num'=>2,
-            'task_worker_num' => 2,
-            'dispatch_mode' => 2
+            'worker_num'=>1,
+            'task_worker_num' => 8,
+            'dispatch_mode' => 2,
+            //'daemonize'=>1
         ));
-        $this->serv->on('WorkerStart', array($this, 'onStart'));
+        $this->serv->on('Start', array($this, 'onStart'));
+        $this->serv->on('WorkerStart', array($this, 'onWorkerStart'));
         $this->serv->on('Receive', array($this, 'onReceive'));
 
         // Task 回调的2个必须函数
@@ -43,87 +52,66 @@ class DBServer
         $this->serv->start();
     }
 
-    function onStart($serv, $worker_id) {
-        $version = swoole_version();
-        echo "onWorkerStart version:{$version} work_id:{$serv->worker_id}\n";
-        global $argv;
-        if ($worker_id >= $serv->setting['worker_num']) {
-            swoole_set_process_name("php5 {$argv[0]} task worker}");
-        } else {
-            swoole_set_process_name("php5 {$argv[0]} event worker}");
-        }
-        //  初始化连接池
-        for ($i = 0; $i < $this->pool_size; $i++) {
-            $db = new PDO("mysql:host={$this->db_host};port={$this->db_port};dbname={$this->db_name}",$this->db_user, $this->db_pwd,
+    public function onStart($serv) {
+        echo "master_pid:{$serv->master_pid}   manager_pid:{$serv->manager_pid} \n";
+        cli_set_process_title("php5 master {$serv->master_pid}");
+
+    }
+
+    public function onWorkerStart( $serv , $worker_id) {
+        echo "onWorkerStart\n";
+        cli_set_process_title("php5 worker {$worker_id}");
+        // 判定是否为Task Worker进程
+        if( $worker_id >= $serv->setting['worker_num'] ) { 
+            cli_set_process_title("php5 task {$worker_id}");
+            $this->pdo = new PDO(
+                "mysql:host=localhost;port=3306;dbname=test", 
+                "root", 
+                "", 
                 array(
                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'UTF8';",
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_PERSISTENT => true
-                )
-            );
-            $this->free_pool[] = $db;
-        }
-    }
+                )   
+            );  
+        }   
+    } 
+
 
     public function onConnect( $serv, $fd, $from_id ) {
         echo "Client {$fd} from:{$from_id} connect\n";
     }
 
     public function onReceive( swoole_server $serv, $fd, $from_id, $data ) {
-        //  如果没有空闲连接,都用着呢
-        if (count($this->free_pool) == 0 ) { 
-            if (count($this->wait_queue) < $this->wait_queue_max) { // 判断是否可以进入等待队列
-                /*
-                $this->wait_queue[] = array(
-                    'fd' => $fd,
-                    'sql' => $data,
-                    );
-                 */
-            } else {
-                $this->serv->send($fd, "request too many, Please try again later.");
-            }
-        } else {
-            $data = array('fd' => $fd,'send_data' => $data);
-            echo "{$fd} from:{$from_id} work_id:{$serv->worker_id} new connection , receive data:".json_encode($data['send_data'])."\n";
-            if (!isset($this->map[$fd])) {
-                $this->map[$fd] = rand(0,$this->serv->setting['task_num']-1);
-            } 
-            $task_id = $this->map[$fd];
-            $this->serv->task(json_encode($data), $task_id);
+        $data = array('fd' => $fd,'send_data' => $data);
+
+        if ( !$this->table->get($fd) ) {
+            echo "not have key \n";
+            $worker_id = rand(0,$this->serv->setting['task_worker_num']-1);
+            $this->table->set($fd,array('worker_id'=>$worker_id));
         }
+        $table_data = $this->table->get($fd);
+        $worker_id = $table_data['worker_id'];
+        echo "receive  worker_id:{$worker_id} ".json_encode($table_data)."\n";
+        $this->serv->task(json_encode($data), $worker_id);
     }
 
     public function doQuery($fd, $data) {
-        echo "doQuery \n";
         $rs = "";
 
         if (is_array($data)) {
-            $cur_key = $fd."_".$data['cur_key'];
+            $cur_key = $fd;
             $func_name = $data['func_name'];
             $param = implode(',', $data['param']);
 
-            //  如果当前连接还在使用,则直接使用。
-            if (isset($this->busy_pool[$cur_key])) {
-                $db = $this->busy_pool[$cur_key];
-            } else { // 如果没有使用则从空闲中pop一个连接出来.
-                $db = array_pop($this->free_pool);
-                $this->busy_pool[$cur_key] = $db;
-            }
-                var_dump($db,$this->busy_pool); //, $this->free_pool);
             if ($func_name == "release") {
-                $db = $this->busy_pool[$cur_key];    // 重新放回到free
-                $this->free_pool[] = $db;
-                unset($this->busy_pool[$cur_key]);
                 echo $rs = "doQuery: release \n";
-                var_dump($db,$this->busy_pool); //, $this->free_pool);
-                $this->serv->send($fd, $rs);
+                $this->table->del($fd);
             } else {    //执行一般pdo方法
-                var_dump($func_name, $param);
-                //echo "fname:{$func_name}   param: ".json_encode($param)." \n";
                 if ($param != "" ) {
-                    $rs = $st = $db->$func_name($param);
+                    $rs = $st = $this->pdo->$func_name($param);
                 } else {
-                    $rs = $st = $db->$func_name();
+                    $rs = $st = $this->pdo->$func_name();
                 }
 
                 if ( $func_name == 'query' ) {  // query 是返回结果集
@@ -131,19 +119,19 @@ class DBServer
                 }
 
                 if ($rs == "") {
-                    echo $rs = "doQuery: data:: isempty \n";
+                    //echo $rs = "doQuery: data:: isempty \n";
                     $this->serv->send($fd, $rs);
                 } else {
-                    echo "doQuery: func_name: {$func_name} data:: ".json_encode($rs)."\n";
+                    //echo "doQuery: func_name: {$func_name} data:: ".json_encode($rs)."\n";
                     $this->serv->send($fd, json_encode($rs));
                 }
             }
         }
-        
     }
 
+
     public function onClose( $serv, $fd, $from_id ) {
-        echo "Client {$fd}  from {$from_id} close connection\n";
+        //echo "Client {$fd}  from {$from_id} close connection\n";
     }
 
     public function onTask($serv, $task_id, $from_id, $data) {
@@ -164,7 +152,7 @@ class DBServer
     }
 
     public function onFinish($serv,$task_id, $data) {
-        echo "Task Id:{$task_id} On Finish,".json_encode($data)." \n";
+        //echo "Task Id:{$task_id} On Finish,".json_encode($data)." \n";
     }
 
 }
