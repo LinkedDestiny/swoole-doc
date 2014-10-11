@@ -37,6 +37,10 @@ class Client {
         $rs = $this->client->send( $data );
         if ($need_recv) {
             $recv_data = $this->client->recv();
+            if (!$recv_data) {
+                echo " error_code:{$this->client->errCode}";
+            }
+
             return $recv_data;
         }
 
