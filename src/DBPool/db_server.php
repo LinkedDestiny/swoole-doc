@@ -31,7 +31,6 @@ class DBServer
 
         $this->free_table = new swoole_table(1024);
         $this->free_table->column('task_id',swoole_table::TYPE_STRING, 100);
-        //$this->free_table->column('busy_id',swoole_table::TYPE_STRING, 100);
         $this->free_table->create();
 
         for ($i = 0; $i < $this->task_worker_num; $i++) {
@@ -83,6 +82,7 @@ class DBServer
             echo "----onTaskStart worker_id: {$worker_id} \n";
             cli_set_process_title("php5  task_id {$worker_id}");
             if (empty($this->pdo)) {
+                echo "{$worker_id} create new pdo \n";
                 $this->pdo = new PDO(
                     "mysql:host=localhost;port=3306;dbname=test", 
                     "root", 
@@ -142,7 +142,7 @@ class DBServer
         $worker_id = $this->getFreeTaskId($fd);
         $this->serv->task($data, $worker_id);
         $this->request_cnt++;
-        echo "Receive fd:{$fd} from:{$from_id} 请求数: {$this->request_cnt} after task \n\n\n\n";
+        echo "Receive fd:{$fd} from:{$from_id} worker_id:{$worker_id} 请求数: {$this->request_cnt} after task \n\n\n\n";
         /*
         else {
             echo $c = "Pool is very busy,Please wait onReceive \n";
@@ -167,8 +167,9 @@ class DBServer
         if (is_array($data)) {
             $func_name = $data['func_name'];
             $param = implode(',', $data['param']);
-            echo " \n\n\n\ndoQuery   fd:{$fd}  func_name: {$func_name} data::".json_encode($data)."\n";
+            echo " \n\n\n\ndoQuery   fd:{$fd} from_id:{$from_id} func_name: {$func_name} data::".json_encode($data)."\n";
             //var_dump($this->pdo, $this->busy_pool, $this->free_pool);
+            var_dump($this->pdo);
             if ($func_name == "release") {
                 echo $rs = "doQuery: release \n";
                 //$this->table->del($fd);

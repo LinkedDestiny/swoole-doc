@@ -43,21 +43,6 @@ class Client {
 
             return $recv_data;
         }
-
-        /*
-        if (!$data) {
-            for ($cnt = 0; $cnt < 1; $cnt++) {
-                $data = $this->client->recv();
-                if ($data) {
-                    break;
-                }
-            }
-//            //echo "receive faild! \n";
-            return false;
-        } else {
-//            //echo "Client Recv data: ".$data." \n";
-        }
-         */
     }
 
     public function isConnected() {
