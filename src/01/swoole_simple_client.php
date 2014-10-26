@@ -19,9 +19,6 @@ class Client
 		$msg = trim(fgets(STDIN));
 		$this->client->send( $msg );
 	}
-
-
-
 }
 
 $client = new Client();
