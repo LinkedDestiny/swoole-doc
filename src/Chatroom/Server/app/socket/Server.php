@@ -87,7 +87,7 @@ class Server implements ICallback
         try {
             $center->parse( $_data );
             $result = $center->route( $serv );
-            $serv->finish( $result );
+            return $result;
         } catch (\Exception $e) {
             
         }
