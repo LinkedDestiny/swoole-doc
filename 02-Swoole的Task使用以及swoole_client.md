@@ -1,8 +1,8 @@
 ###第二章 Swoole的task使用以及swoole_client
 环境说明：
-系统：Ubuntu14.04 （安装教程包括CentOS6.5）
-PHP版本：PHP-5.5.10
-swoole版本：1.7.6-stable
+系统：Ubuntu14.04 （安装教程包括CentOS6.5）<br>
+PHP版本：PHP-5.5.10<br>
+swoole版本：1.7.6-stable<br>
 
 上一章已经简单介绍了如何写一个简单的Echo服务器，并了解了onReceive等几个核心回调函数的使用方法。这一章，我将介绍如何使用Swoole的异步任务Task。
 
