@@ -13,3 +13,4 @@ simonarthur2012@gmail.com
 ###目录
 1. [环境搭建及扩展安装](01-环境搭建及扩展安装.md)
 2. [Swoole的Task使用以及swoole_client](02-Swoole的Task使用以及swoole_client.md)
+3. [Timer定时器、心跳检测及Task进阶实例：mysql连接池](03.Timer定时器、心跳检测及Task进阶实例：mysql连接池.md)
