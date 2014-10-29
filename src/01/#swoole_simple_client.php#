@@ -18,11 +18,6 @@ class Client
 		fwrite(STDOUT, "请输入消息：");
 		$msg = trim(fgets(STDIN));
 		$this->client->send( $msg );
-	}
-
-    public function test() {
-        $this->client = new swoole_client(SWOOLE_SOCK_TCP);
-        
     }
 }
 

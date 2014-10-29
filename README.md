@@ -12,3 +12,4 @@ simonarthur2012@gmail.com
 
 ###目录
 1. [环境搭建及扩展安装](01-环境搭建及扩展安装.md)
+2. [Swoole的Task使用以及swoole_client](02-Swoole的Task使用以及swoole_client.md)

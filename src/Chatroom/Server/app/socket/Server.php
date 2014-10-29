@@ -77,7 +77,7 @@ class Server implements ICallback
     {
 
     }
-    
+
     public function onTask()
     {
         $params = func_get_args();
@@ -89,10 +89,10 @@ class Server implements ICallback
             $result = $center->route( $serv );
             return $result;
         } catch (\Exception $e) {
-            
+
         }
     }
-    
+
     public function onFinish()
     {
 

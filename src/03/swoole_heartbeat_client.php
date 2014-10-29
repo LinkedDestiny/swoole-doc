@@ -28,7 +28,7 @@ class Client
   public function onConnect( $cli) {
     fwrite(STDOUT, "Enter Msg:");
     swoole_event_add(STDIN, function($fp){
-		    global $cli;
+		global $cli;
         fwrite(STDOUT, "Enter Msg:");
         $msg = trim(fgets(STDIN));
   	    $cli->send( $msg );

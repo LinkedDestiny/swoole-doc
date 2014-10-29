@@ -3,6 +3,8 @@
 class Client
 {
 	private $client;
+  private $i = 0;
+  private $time;
   
 	public function __construct() {
     $this->client = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
@@ -22,17 +24,19 @@ class Client
 	}
 
 	public function onReceive( $cli, $data ) {
-    echo "Get Message From Server: {$data}\n";
+    $this->i ++;
+    if( $this->i >= 10000 ) {
+      echo "Use Time: " . ( time() - $this->time);
+      exit(0);
+    }
+    else {
+       $cli->send("Get");
+    }
   }
 
   public function onConnect( $cli) {
-    fwrite(STDOUT, "Enter Msg:");
-    swoole_event_add(STDIN, function($fp){
-		    global $cli;
-        fwrite(STDOUT, "Enter Msg:");
-        $msg = trim(fgets(STDIN));
-  	    $cli->send( $msg );
-    });
+    $cli->send("Get");
+    $this->time = time();
   }
 
   public function onClose( $cli) {
