@@ -49,9 +49,10 @@ class MySQLPool
 
     public function onReceive( swoole_server $serv, $fd, $from_id, $data ) {
         $sql = array(
-        	'sql'=>'select * from Test where pid > ?',
+        	'sql'=>'Insert into Test values( pid = ?, name = ?)',
         	'param' => array(
-        		0
+        		0 ,
+        		"'name'"
         	),
         	'fd' => $fd
         );
@@ -68,8 +69,7 @@ class MySQLPool
     	$statement = $this->pdo->prepare($sql['sql']);
         $statement->execute($sql['param']);    	
 
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-        $serv->send( $sql['fd'],json_encode($result));
+        $serv->send( $sql['fd'],"Insert");
     	return true;
     }
 
