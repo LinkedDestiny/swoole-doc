@@ -35,7 +35,7 @@ class Server
     public function onReceive( swoole_server $serv, $fd, $from_id, $data ) {
         echo "Get Message From Client {$fd}:{$data}\n";
 
-         $param = array(
+        $param = array(
             'fd' => $fd,
             'msg' => $data
         );
