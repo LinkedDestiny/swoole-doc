@@ -23,7 +23,7 @@ class Server
         $this->serv->start();
     }
 
-        public function onStart( $serv ) {
+    public function onStart( $serv ) {
         echo "Start\n";
     }
 
