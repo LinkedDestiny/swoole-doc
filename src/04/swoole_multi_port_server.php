@@ -9,7 +9,7 @@ class Server
     private $serv;
 
     public function __construct() {
-        $this->serv = new swoole_server("127.0.0.1", 9501);
+        $this->serv = new swoole_server("192.168.1.124", 9501);
         $this->serv->set(array(
             'worker_num' => 8,
             'daemonize' => false,
@@ -23,8 +23,7 @@ class Server
         $this->serv->on('Receive', array($this, 'onReceive'));
         $this->serv->on('Close', array($this, 'onClose'));
 
-        //add listener
-        $serv->addlistener("127.0.0.1" , 9502, SWOOLE_SOCK_UDP);
+        $this->serv->addlistener("127.0.0.1" , 9502 , SWOOLE_TCP );
 
         $this->serv->start();
     }
@@ -35,7 +34,6 @@ class Server
 
     public function onConnect( $serv, $fd, $from_id ) {
         echo "Client {$fd} connect\n";
-       
     }
 
     public function onReceive( swoole_server $serv, $fd, $from_id, $data ) {
@@ -58,5 +56,4 @@ class Server
 new Server();
 
 // use src/o2/swoole_async_client to test the server.
-
 ?>
