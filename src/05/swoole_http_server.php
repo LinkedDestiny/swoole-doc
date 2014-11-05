@@ -18,6 +18,7 @@ class Server
 
         $this->http->on('Start', array($this, 'onStart'));
         $this->http->on('request' , array( $this , 'onRequest'));
+        $this->http->on('message' , array( $this , 'onMessage'));
         $this->http->start();
     }
 
@@ -27,6 +28,11 @@ class Server
 
     public function onRequest($request, $response) {
         $response->end("<h1>Hello Swoole.</h1>");
+    }
+
+    public function onMessage($request, $response) {
+        echo $request->message;
+        $response->message(json_encode(array("data1", "data2")));
     }
 }
 
