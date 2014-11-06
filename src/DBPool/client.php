@@ -20,7 +20,7 @@ class DB {
         $this->config['send_data'] = $data;
         $this->cli = new Client($this->config);
         $this->cli->connect();
-        $this->cli->send($data);
+//        $this->cli->send($data);
         /*
         panduan:
         if ($this->cli->isConnected()) {

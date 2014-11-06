@@ -76,8 +76,7 @@ class DBServer
             }
         } else {
             $data = array('fd' => $fd,'send_data' => $data);
-            $this->serv->send($fd, "new connection \n");
-            echo "{$fd}  {$from_id} new connection , receive data:".$data['data']."\n";
+            echo "{$fd}  {$from_id} new connection , receive data:".json_encode($data['send_data'])."\n";
             $this->serv->task(json_encode($data));
         }
     }
