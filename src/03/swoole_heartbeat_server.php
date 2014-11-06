@@ -2,7 +2,7 @@
 
 class TimerServer
 {
-	private $server;
+	private $serv;
 
 	public function __construct() {
 		$this->serv = new swoole_server("0.0.0.0", 9501);

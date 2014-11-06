@@ -2,7 +2,7 @@
 
 class TimerServer
 {
-	private $server;
+	private $serv;
 
 	public function __construct() {
 		$this->serv = new swoole_server("0.0.0.0", 9501);
@@ -28,9 +28,9 @@ class TimerServer
         echo "onWorkerStart\n";
         // 只有当worker_id为0时才添加定时器,避免重复添加
         if( $worker_id == 0 ) {
-        	$serv->addtimer(1000);
-	        $serv->addtimer(1500);
+        	$serv->addtimer(100);
 	        $serv->addtimer(500);
+            $serv->addtimer(1000);
         }
     }
 
@@ -56,8 +56,8 @@ class TimerServer
     			echo "Do Thing B at interval 1000\n";
     			break;
     		}
-    		case 1500:{
-    			echo "Do Thing C at interval 1500\n";
+    		case 100:{
+    			echo "Do Thing C at interval 100\n";
     			break;
     		}
     	}

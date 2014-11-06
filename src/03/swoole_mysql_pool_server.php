@@ -2,7 +2,7 @@
 
 class MySQLPool
 {
-	private $server;
+	private $serv;
 	private $pdo;
 
 	public function __construct() {
