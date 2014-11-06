@@ -13,9 +13,9 @@ class Client {
         $this->server_ip = isset($config['server_ip']) ? $config['server_ip'] : "127.0.0.1";
         $this->send_data = $config['send_data'];
 
-        //$this->client = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);    //尝试异步 send的时候 总是提示未连接 只能在onConnect里send.
+        $this->client = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);    //尝试异步 send的时候 总是提示未连接 只能在onConnect里send.
 
-        $this->client = new swoole_client(SWOOLE_SOCK_TCP );    //同步 一连就断了。
+        //$this->client = new swoole_client(SWOOLE_SOCK_TCP );    //同步 一连就断了。
 
         $this->client->on('Connect',array($this,'onConnect'));
         $this->client->on('Receive',array($this,'onReceive'));
