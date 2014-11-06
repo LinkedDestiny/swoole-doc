@@ -64,13 +64,18 @@ class MySQLPool
     }
 
    	public function onTask($serv,$task_id,$from_id, $data) {
-   		$sql = json_decode( $data , true );
-    	
-    	$statement = $this->pdo->prepare($sql['sql']);
-        $statement->execute($sql['param']);    	
+        try{
+            $sql = json_decode( $data , true );
+        
+            $statement = $this->pdo->prepare($sql['sql']);
+            $statement->execute($sql['param']);     
 
-        $serv->send( $sql['fd'],"Insert");
-    	return true;
+            $serv->send( $sql['fd'],"Insert");
+            return true;
+        } catch( PDOException $e ) {
+            var_dump( $e );
+            return false;
+        }
     }
 
     public function onFinish($serv,$task_id, $data) {
