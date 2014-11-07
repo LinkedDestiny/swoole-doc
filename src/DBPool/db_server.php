@@ -83,20 +83,42 @@ class DBServer
 
     public function doQuery($fd, $data) {
         echo "doQuery \n";
-        $db = array_pop($this->free_pool);
-        $this->busy_pool[$fd] = $db;
-        $func_name = $data['func_name'];
-        $param = implode(',', $data['param']);
+        $rs = "";
 
-        //echo "fname:{$func_name}   param: {$param}";
-        $st = $db->$func_name($param);
-        $rs = $st->fetchAll();
+        if (is_array($data)) {
+            $cur_key = $fd."_".$data['cur_key'];
+            $func_name = $data['func_name'];
+            $param = implode(',', $data['param']);
+
+            //  如果当前连接还在使用,则直接使用。
+            if (isset($this->busy_pool[$cur_key])) {
+                $db = $this->busy_pool[$cur_key];
+            } else { // 如果没有使用则从空闲中pop一个连接出来.
+                $db = array_pop($this->free_pool);
+                $this->busy_pool[$cur_key] = $db;
+            }
+            var_dump($db);
+            if ($func_name == "release") {
+                $db = $this->busy_pool[$cur_key];    // 重新放回到free
+                $this->free_pool[] = $db;
+                unset($this->busy_pool[$cur_key]);
+                echo $rs = "doQuery: release \n";
+                $this->serv->send($fd, $rs);
+            } else {    //执行一般pdo方法
+                echo "fname:{$func_name}   param: {$param} \n";
+                $st = $db->$func_name($param);
+                $rs = $st->fetchAll();
+
+                if ($rs == "") {
+                    echo $rs = "doQuery: data:: isempty \n";
+                    $this->serv->send($fd, $rs);
+                } else {
+                    echo "doQuery: data:: ".json_encode($rs)."\n";
+                    $this->serv->send($fd, json_encode($rs));
+                }
+            }
+        }
         
-        $db = $this->busy_pool[$fd];    // 重新放回到free
-        $this->free_pool[] = $db;
-        unset($this->busy_pool[$fd]);
-        echo "doQuery: data:: ".json_encode($rs)."\n";
-        $this->serv->send($fd, json_encode($rs));
     }
 
     public function onClose( $serv, $fd, $from_id ) {
