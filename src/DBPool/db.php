@@ -4,6 +4,16 @@ error_reporting(E_ALL);ini_set('display_errors',1);
 require("db_client_sync.php");
 require("config.php");
 
+/**
+ * DB 
+ * DB 基础类 类似于我们程序中的那个pdo类
+ * 
+ * @package 
+ * @version $id$
+ * @copyright 1997-2005 The PHP Group
+ * @author zhanglei5 <zhanglei5@group.com> 
+ * @license PHP Version 3.0 {@link http://www.php.net/license/3_0.txt}
+ */
 class DB {
     private $cli;
     private $config;
@@ -36,35 +46,65 @@ class DB {
         $this->cli->connect();
     }
 
+
+
+    function __call($name, $arguments) {
+        $allow_function = array("query","exec", "beginTransaction","commit","errorCode","errorInfo","getAttribute","getAvailableDrivers",
+            "inTransaction",
+            "lastInsertId","prepare","quote","rollBack","setAttribute",
+            "release");
+        if (in_array($name, $allow_function)) {
+            $this->send_data['func_name'] = $name; 
+            $this->send_data['param'] = $arguments;
+            $rs = $this->cli->send($this->send_data);
+        } else {
+            echo "deny function name {$name} \n";
+        }
+    }
+
+    function __desctruct() {
+        $this->release();
+    }
+
+    /*
     function query($sql) {
         $this->send_data['func_name'] = __FUNCTION__;
         $this->send_data['param'] = array('sql'=> $sql);
 
         $rs = $this->cli->send($this->send_data);
         return $rs;
-        /*
-        panduan:
-        if ($this->cli->isConnected()) {
-            $this->cli->send($data);
-        } else {
-            echo "未连接呢！\n";
-            $this->cli->connect();
-            goto panduan;
-        }
-         */
+    }
+
+    function exec() {
+        $this->send_data['func_name'] = __FUNCTION__;
+        $this->send_data['param'] = func_get_args();
+        $rs = $this->cli->send($this->send_data);
     }
 
     function release() {
         $this->send_data['func_name'] = __FUNCTION__;
-        $this->send_data['param'] = array();
+        $this->send_data['param'] = func_get_args();
         $rs = $this->cli->send($this->send_data);
     }
 
     function commit() {
         $this->send_data['func_name'] = __FUNCTION__;
-        $this->send_data['param'] = array();
+        $this->send_data['param'] = func_get_args();
         $rs = $this->cli->send($this->send_data);
     }
+
+    function beginTransaction() {
+        $this->send_data['func_name'] = __FUNCTION__;
+        $this->send_data['param'] = func_get_args();
+        $rs = $this->cli->send($this->send_data);
+    }
+
+    function rollBack() {
+        $this->send_data['func_name'] = __FUNCTION__;
+        $this->send_data['param'] = func_get_args();
+        $rs = $this->cli->send($this->send_data);
+    }
+     */
 }
 
  ?>

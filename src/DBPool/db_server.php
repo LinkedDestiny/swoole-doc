@@ -97,23 +97,32 @@ class DBServer
                 $db = array_pop($this->free_pool);
                 $this->busy_pool[$cur_key] = $db;
             }
-            var_dump($db);
+                var_dump($db,$this->busy_pool);
             if ($func_name == "release") {
                 $db = $this->busy_pool[$cur_key];    // 重新放回到free
                 $this->free_pool[] = $db;
                 unset($this->busy_pool[$cur_key]);
                 echo $rs = "doQuery: release \n";
+                var_dump($db,$this->busy_pool);
                 $this->serv->send($fd, $rs);
             } else {    //执行一般pdo方法
-                echo "fname:{$func_name}   param: {$param} \n";
-                $st = $db->$func_name($param);
-                $rs = $st->fetchAll();
+                var_dump($func_name, $param);
+                //echo "fname:{$func_name}   param: ".json_encode($param)." \n";
+                if ($param != "" ) {
+                    $rs = $st = $db->$func_name($param);
+                } else {
+                    $rs = $st = $db->$func_name();
+                }
+
+                if ( $func_name == 'query' ) {  // query 是返回结果集
+                    $rs = $st->fetchAll();
+                }
 
                 if ($rs == "") {
                     echo $rs = "doQuery: data:: isempty \n";
                     $this->serv->send($fd, $rs);
                 } else {
-                    echo "doQuery: data:: ".json_encode($rs)."\n";
+                    echo "doQuery: func_name: {$func_name} data:: ".json_encode($rs)."\n";
                     $this->serv->send($fd, json_encode($rs));
                 }
             }
@@ -131,7 +140,7 @@ class DBServer
         $send_data = json_decode( $data['send_data'], true);
         echo "Server On Task,".json_encode($data)." \n";
         $this->doQuery($data['fd'], $send_data);
-        $serv->send($data['fd'], " On Task");
+        //$serv->send($data['fd'], " On Task");
 
         /*
         $sql = json_decode( $data , true );

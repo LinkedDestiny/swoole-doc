@@ -32,7 +32,19 @@ class Client {
         echo "Send data: {$data} \n";
         $rs = $this->client->send( $data );
         $data = $this->client->recv();
-        echo "Recv data: {$data} \n";
+        if (!$data) {
+            for ($cnt = 0; $cnt < 3; $cnt++) {
+                $data = $this->client->recv();
+                if ($data) {
+                    break;
+                }
+            }
+            echo "receive faild! \n";
+            return false;
+        } else {
+            //echo "Client Recv data: ".var_dump($data)." \n";
+            echo "Client Recv data: ".$data." \n";
+        }
         return $data;
     }
 
