@@ -33,7 +33,7 @@ class Client {
         $rs = $this->client->send( $data );
         $data = $this->client->recv();
         if (!$data) {
-            for ($cnt = 0; $cnt < 3; $cnt++) {
+            for ($cnt = 0; $cnt < 1; $cnt++) {
                 $data = $this->client->recv();
                 if ($data) {
                     break;

@@ -14,6 +14,7 @@ class DBServer
 
     protected $port;    //  server监听的端口
     protected $serv;
+    private $map;       //  fd 和 task的对应关系
 
     function __construct(array $config) {
         $this->port = isset($config['port']) ? $config['port'] : 9500; // server监听的端口
@@ -28,8 +29,9 @@ class DBServer
     function run() {
         $this->serv = new swoole_server("127.0.0.1", $this->port);
         $this->serv->set( array(
-            'worker_num'=>1,
-            'task_worker_num' => 2
+            'worker_num'=>2,
+            'task_worker_num' => 2,
+            'dispatch_mode' => 2
         ));
         $this->serv->on('WorkerStart', array($this, 'onStart'));
         $this->serv->on('Receive', array($this, 'onReceive'));
@@ -43,7 +45,13 @@ class DBServer
 
     function onStart($serv, $worker_id) {
         $version = swoole_version();
-        echo "onWorkerStart {$version}\n";
+        echo "onWorkerStart version:{$version} work_id:{$serv->worker_id}\n";
+        global $argv;
+        if ($worker_id >= $serv->setting['worker_num']) {
+            swoole_set_process_name("php5 {$argv[0]} task worker}");
+        } else {
+            swoole_set_process_name("php5 {$argv[0]} event worker}");
+        }
         //  初始化连接池
         for ($i = 0; $i < $this->pool_size; $i++) {
             $db = new PDO("mysql:host={$this->db_host};port={$this->db_port};dbname={$this->db_name}",$this->db_user, $this->db_pwd,
@@ -58,7 +66,7 @@ class DBServer
     }
 
     public function onConnect( $serv, $fd, $from_id ) {
-        echo "Client {$fd} connect\n";
+        echo "Client {$fd} from:{$from_id} connect\n";
     }
 
     public function onReceive( swoole_server $serv, $fd, $from_id, $data ) {
@@ -76,8 +84,12 @@ class DBServer
             }
         } else {
             $data = array('fd' => $fd,'send_data' => $data);
-            echo "{$fd}  {$from_id} new connection , receive data:".json_encode($data['send_data'])."\n";
-            $this->serv->task(json_encode($data));
+            echo "{$fd} from:{$from_id} work_id:{$serv->worker_id} new connection , receive data:".json_encode($data['send_data'])."\n";
+            if (!isset($this->map[$fd])) {
+                $this->map[$fd] = rand(0,$this->serv->setting['task_num']-1);
+            } 
+            $task_id = $this->map[$fd];
+            $this->serv->task(json_encode($data), $task_id);
         }
     }
 
@@ -97,13 +109,13 @@ class DBServer
                 $db = array_pop($this->free_pool);
                 $this->busy_pool[$cur_key] = $db;
             }
-                var_dump($db,$this->busy_pool);
+                var_dump($db,$this->busy_pool); //, $this->free_pool);
             if ($func_name == "release") {
                 $db = $this->busy_pool[$cur_key];    // 重新放回到free
                 $this->free_pool[] = $db;
                 unset($this->busy_pool[$cur_key]);
                 echo $rs = "doQuery: release \n";
-                var_dump($db,$this->busy_pool);
+                var_dump($db,$this->busy_pool); //, $this->free_pool);
                 $this->serv->send($fd, $rs);
             } else {    //执行一般pdo方法
                 var_dump($func_name, $param);
@@ -131,14 +143,13 @@ class DBServer
     }
 
     public function onClose( $serv, $fd, $from_id ) {
-        echo "Client {$fd} close connection\n";
+        echo "Client {$fd}  from {$from_id} close connection\n";
     }
 
-    public function onTask($serv,$task_id,$from_id, $data) {
-        
+    public function onTask($serv, $task_id, $from_id, $data) {
         $data = json_decode( $data , true );
         $send_data = json_decode( $data['send_data'], true);
-        echo "Server On Task,".json_encode($data)." \n";
+        echo "Server On Task, task_id:{$task_id} from_id: {$from_id} ".json_encode($data)." \n";
         $this->doQuery($data['fd'], $send_data);
         //$serv->send($data['fd'], " On Task");
 

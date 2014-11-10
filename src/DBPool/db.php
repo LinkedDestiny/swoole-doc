@@ -65,46 +65,6 @@ class DB {
     function __desctruct() {
         $this->release();
     }
-
-    /*
-    function query($sql) {
-        $this->send_data['func_name'] = __FUNCTION__;
-        $this->send_data['param'] = array('sql'=> $sql);
-
-        $rs = $this->cli->send($this->send_data);
-        return $rs;
-    }
-
-    function exec() {
-        $this->send_data['func_name'] = __FUNCTION__;
-        $this->send_data['param'] = func_get_args();
-        $rs = $this->cli->send($this->send_data);
-    }
-
-    function release() {
-        $this->send_data['func_name'] = __FUNCTION__;
-        $this->send_data['param'] = func_get_args();
-        $rs = $this->cli->send($this->send_data);
-    }
-
-    function commit() {
-        $this->send_data['func_name'] = __FUNCTION__;
-        $this->send_data['param'] = func_get_args();
-        $rs = $this->cli->send($this->send_data);
-    }
-
-    function beginTransaction() {
-        $this->send_data['func_name'] = __FUNCTION__;
-        $this->send_data['param'] = func_get_args();
-        $rs = $this->cli->send($this->send_data);
-    }
-
-    function rollBack() {
-        $this->send_data['func_name'] = __FUNCTION__;
-        $this->send_data['param'] = func_get_args();
-        $rs = $this->cli->send($this->send_data);
-    }
-     */
 }
 
  ?>

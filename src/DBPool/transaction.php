@@ -11,7 +11,8 @@ for ($i = 0; $i < 4; $i++) {
     $sql = "insert into `test` values ({$i},'{$i}') ";
     $db->exec($sql);
 }
-$db->rollBack();
+//$db->commit();
+ $db->rollBack();
 $db->release();
 
 
