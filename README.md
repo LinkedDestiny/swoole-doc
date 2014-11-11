@@ -18,3 +18,4 @@ simonarthur2012@gmail.com (Lancelot)<br>
 3. [Timer定时器、心跳检测及Task进阶实例：mysql连接池](03.Timer定时器、心跳检测及Task进阶实例：mysql连接池.md)
 4. [Swoole多端口监听、热重启以及Timer进阶：简单crontab](#04.Swoole多端口监听、热重启以及Timer进阶：简单crontab.md)
 5. [Swoole的自定义协议功能的使用](#05.Swoole的自定义协议功能的使用.md)
+6. [Swoole的文件操作及进阶实例：简易FTP](#06.Swoole的文件操作及进阶实例：简易FTP.md)
