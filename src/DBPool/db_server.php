@@ -15,8 +15,8 @@ class DBServer
 
     protected $port;    //  server监听的端口
     protected $serv;
-    private $map;       //  fd 和 task的对应关系
-    private $pdo;
+    private $map_table;       //  fd 和 task的对应关系
+    private $pdo = null;
     protected $request_cnt;
 
     function __construct(array $config) {
@@ -81,21 +81,6 @@ class DBServer
         if( $worker_id >= $serv->setting['worker_num'] ) {  
             echo "----onTaskStart worker_id: {$worker_id} \n";
             cli_set_process_title("php5  task_id {$worker_id}");
-            if (empty($this->pdo)) {
-                echo "{$worker_id} create new pdo \n";
-                $this->pdo = new PDO(
-                    "mysql:host=localhost;port=3306;dbname=test", 
-                    "root", 
-                    "",
-                    array(
-                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'UTF8';",
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_PERSISTENT => true
-                    )   
-                );  
-            } else {
-                echo "this task  {$worker_id} is have pdo \n";
-            }
         } else {
             echo "--onWorkerStart worker_id: {$worker_id} \n";
             cli_set_process_title("php5 worker {$worker_id}");
@@ -218,6 +203,21 @@ class DBServer
      * @access public
      */
     public function onTask($serv, $task_id, $from_id, $data) {
+            if ($this->pdo == null) {
+                echo "Task create new pdo \n";
+                $this->pdo = new PDO(
+                    "mysql:host=localhost;port=3306;dbname=test", 
+                    "root", 
+                    "",
+                    array(
+                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'UTF8';",
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_PERSISTENT => true
+                    )   
+                );  
+            } else {
+                echo "this task   is have pdo \n";
+            }
         $data = json_decode( $data , true );
         $send_data = json_decode( $data['send_data'], true);
         echo "Server On Task, task_id:{$task_id} from_id: {$from_id} ".json_encode($data)." \n";
