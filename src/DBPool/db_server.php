@@ -4,6 +4,8 @@ class DBServer
     protected $task_worker_num;
     protected $work_num;
     protected $free_table;
+    protected $map_table;       //  fd 和 task的对应关系
+
     protected $busy_table;
     protected $wait_queue = array(); //等待队列
     protected $wait_queue_max = 100; //等待队列的最大长度，超过后将拒绝新的请求
@@ -15,7 +17,6 @@ class DBServer
 
     protected $port;    //  server监听的端口
     protected $serv;
-    private $map_table;       //  fd 和 task的对应关系
     private $pdo = null;
     protected $request_cnt;
 
@@ -37,7 +38,6 @@ class DBServer
             $free[] = $i; 
         }
         $arr = array('free'=>$free,'busy'=>array());
-        //$this->free_table->set("task",array('task_id'=> implode(",", $free), 'busy_id'=>''));
 
         $this->free_table->set("task_id",array('task_id'=> json_encode($arr)));
 
@@ -127,13 +127,6 @@ class DBServer
         $worker_id = $this->getFreeTaskId($fd);
         $this->serv->task($data, $worker_id);
         $this->request_cnt++;
-        echo "Receive fd:{$fd} from:{$from_id} worker_id:{$worker_id} 请求数: {$this->request_cnt} after task \n\n\n\n";
-        /*
-        else {
-            echo $c = "Pool is very busy,Please wait onReceive \n";
-            $this->wait_queue[$fd][] = $data;
-        }
-         */
     }
 
     public function process() {
@@ -147,17 +140,11 @@ class DBServer
     }
 
     public function doQuery($serv, $fd, $from_id, $data) {
-       // echo "fd:{$fd} from_id: {$from_id} receive_data:".json_encode($data);
         $rs = "";
         if (is_array($data)) {
             $func_name = $data['func_name'];
             $param = implode(',', $data['param']);
-            echo " \n\n\n\ndoQuery   fd:{$fd} from_id:{$from_id} func_name: {$func_name} data::".json_encode($data)."\n";
-            //var_dump($this->pdo, $this->busy_pool, $this->free_pool);
-            var_dump($this->pdo);
             if ($func_name == "release") {
-                echo $rs = "doQuery: release \n";
-                //$this->table->del($fd);
                 if ( $this->map_table->get($fd)) {
                     $this->map_table->del($fd);
                 }
@@ -173,16 +160,13 @@ class DBServer
                 }
 
                 if ($rs == "") {
-                    //
-                   echo  $rs = "doQuery: data:: isempty \n";
                     $serv->send($fd, $rs);
                 } else {
                     if ( is_array($rs)) {
                         $rs = json_encode($rs);
                     }
-                    echo "doQuery before send: func_name: {$func_name} fd:{$fd} receive:".json_encode($data)." send_data:: {$rs}\n";
                     //$sf = $serv->send($fd, $rs, $from_id);
-                    var_dump($serv->send($fd, $rs, $from_id));
+                    $serv->send($fd, $rs, $from_id);
                 }
             }
         }
@@ -204,7 +188,7 @@ class DBServer
      */
     public function onTask($serv, $task_id, $from_id, $data) {
             if ($this->pdo == null) {
-                echo "Task create new pdo \n";
+        //        echo "Task create new pdo \n";
                 $this->pdo = new PDO(
                     "mysql:host=localhost;port=3306;dbname=test", 
                     "root", 
@@ -215,12 +199,9 @@ class DBServer
                         PDO::ATTR_PERSISTENT => true
                     )   
                 );  
-            } else {
-                echo "this task   is have pdo \n";
             }
         $data = json_decode( $data , true );
         $send_data = json_decode( $data['send_data'], true);
-        echo "Server On Task, task_id:{$task_id} from_id: {$from_id} ".json_encode($data)." \n";
         $this->doQuery($serv, $data['fd'], $from_id, $send_data);
     }
 
