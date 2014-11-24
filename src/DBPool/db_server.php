@@ -53,8 +53,8 @@ class DBServer
         $this->serv->set( array(
             'worker_num'=>$this->worker_num,
             'task_worker_num' => $this->task_worker_num,
+            'task_max_request' => 0,
             'dispatch_mode' => 2,
-            //'daemonize'=>1
         ));
         $this->serv->on('Start', array($this, 'onStart'));
         $this->serv->on('ManagerStart', array($this, 'onManagerStart'));
