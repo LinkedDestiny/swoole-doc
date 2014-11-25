@@ -38,8 +38,8 @@ class DB {
     }
 
     function connect($config = array()) {
-        $this->_makeCurKey();
-        $this->send_data['cur_key'] = $this->cur_key;
+        //$this->_makeCurKey();
+        //$this->send_data['cur_key'] = $this->cur_key;
         $this->send_data['param'] = array();
         $this->config = $config;
         $this->cli = new Client($this->config);
@@ -62,7 +62,8 @@ class DB {
         }
     }
 
-    function __desctruct() {
+    function __destruct() {
+        echo "db destruct release()\n";
         $this->release();
     }
 }

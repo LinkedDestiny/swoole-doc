@@ -7,6 +7,7 @@ $config = array(
         'db_user' => 'root',
         'db_pwd' => '123456',
         'db_port' => '3306',
+        'pool_size' => '1',
         )
     );
  ?>

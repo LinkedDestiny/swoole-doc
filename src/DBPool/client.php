@@ -7,7 +7,7 @@ $key = 'db1';
 $db = new DB();
 $db->connect($config[$key]);
 for ($i = 0; $i <10000; $i++) {
-    $rs = $db->query("show tables;");
+    $rs = $db->query("select * from test;");
 }
 $db->release();
 
