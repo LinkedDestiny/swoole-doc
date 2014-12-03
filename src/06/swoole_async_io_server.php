@@ -58,7 +58,7 @@ class Server
                 break;
             default:
                 // 注：此处存在一个Bug，如果文件不存在并且没有指定offset（或者指定为-1），会引发一个错误。这里需要注意一下。
-                swoole_async_write( 'test_1.log', "This is a test log\n" , -1 , function(){
+                swoole_async_write( 'test_1.log', "This is a test log\n" , -1 , function( $filename, $writen){
                     var_dump( func_get_args() );
                 });
                 break;
