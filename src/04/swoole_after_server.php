@@ -52,7 +52,7 @@ class Server
         $this->serv->send( $param['fd'] , $param['msg']);
     }
 
-    public function onTimer( $interval ) {
+    public function onTimer( $serv, $interval ) {
         // Do nothing.
     }
 }
