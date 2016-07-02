@@ -30,8 +30,18 @@ class BaseProcess
             $this->process_list[$i]->start();
         }
 
-        swoole_timer_tick(1000, function() {
-            $this->process->push("Hello");
+        swoole_timer_tick(1000, function($timer_id) {
+            static $index = 0;
+            $index = $index + 1;
+            $this->process->push($index . "Hello");
+            var_dump($index);
+            if( $index == 10 )
+            {
+                $this->process->push("exit");
+                $this->process->push("exit");
+                $this->process->push("exit");
+                swoole_timer_clear($timer_id);
+            }
         });
     }
 
@@ -41,9 +51,19 @@ class BaseProcess
         {
             $data = $worker->pop();
             var_dump($data);
+            if($data == 'exit')
+            {
+                $worker->exit();
+            }
             sleep(5);
         }
     }
 }
 
 new BaseProcess();
+swoole_process::signal(SIGCHLD, function($sig) {
+  //必须为false，非阻塞模式
+  while($ret =  swoole_process::wait(false)) {
+      echo "PID={$ret['pid']}\n";
+  }
+});

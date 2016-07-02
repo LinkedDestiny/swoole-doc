@@ -14,13 +14,18 @@ class BaseProcess
     public function __construct()
     {
         $this->process = new swoole_process(array($this, 'run') , false , true);
-        //$this->process->daemon(true,true);
+        if( !$this->process->useQueue( 123 ) )
+        {
+            var_dump(swoole_strerror(swoole_errno()));
+            exit;
+        }
         $this->process->start();
-        
-        swoole_event_add($this->process->pipe, function ($pipe){
-            $data = $this->process->read();
+
+        while(true)
+        {
+            $data = $this->process->pop();
             echo "RECV: " . $data.PHP_EOL;
-        });
+        }
     }
 
     public function run($worker)
@@ -28,7 +33,7 @@ class BaseProcess
         swoole_timer_tick(1000, function($timer_id ) {
             static $index = 0;
             $index = $index + 1;
-            $this->process->write("Hello");
+            $this->process->push("Hello");
             var_dump($index);
             if( $index == 10 )
             {
