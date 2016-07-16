@@ -1,0 +1,23 @@
+{
+    "name": "swoole/chat",
+    "license":"proprietary",
+    "authors": [
+        {
+            "name": "lidanyang",
+            "email": "lidanyang@bilibili.com"
+        }
+    ],
+    "require": {
+        "zphp/zphp":"dev-master"
+    },
+    "config":
+    {
+        "secure-http":false
+    },
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    }
+}

@@ -7,17 +7,19 @@ use Swoole\Core\Config as ZConfig,
 
 class Chat extends BaseController
 {
-    private $reids;
+    private $redis;
+    protected $server;
 
-	public function setServer($server) {
+    public function __construct($server)
+    {
         $this->server = $server;
-        $this->params = $server->getParams();
         $this->redis = DBFactory::getInstance('Chat');
     }
 
-    public function online() {
-    	$fd = $this->params['fd'];
-    	$name = $this->params['name'];
+    public function online($params) {
+    	$fd = $params['fd'];
+    	$name = $params['name'];
+
         echo $name . PHP_EOL;
     	$data = json_encode( array(
     		'op' => 'online',
@@ -26,37 +28,35 @@ class Chat extends BaseController
     	));
         $this->redis->online( $fd );
         $this->redis->setUserInfo( $fd , array( 'name' => $name ) );
-    	$data = pack("Na*", strlen($data) , $data );
+
         $fd_list = $this->redis->getFdList();
         unset($fd_list[array_search( $fd ,$fd_list)]);
     	$this->sendMessage( $fd_list , $data );
 
-        $this->getOnlineList();
+        $this->getOnlineList($params);
     }
 
-    public function offline() {
-    	$fd = $this->params['fd'];
+    public function offline($params) {
+    	$fd = $params['fd'];
 
     	$data = json_encode( array(
     		'op' => 'offline',
     		'fd' => $fd,
     	));
-    	$data = pack("Na*", strlen($data) , $data );
         $this->redis->offline( $fd );
     	$this->sendMessage( $this->redis->getFdList( $this->redis->getChannel( $fd ) ), $data );
     }
 
-    public function changeChannel() {
-    	$fd = $this->params['fd'];
-    	$from = $this->params['from'];
-    	$to = $this->params['to'];
+    public function changeChannel($params) {
+    	$fd = $params['fd'];
+    	$from = $params['from'];
+    	$to = $params['to'];
 
     	$data = json_encode( array(
     		'op' => 'online',
     		'fd' => $fd,
     		'name' => $this->redis->getUserInfo( $fd , "name")
     	));
-    	$data = pack("Na*", strlen($data) , $data );
 
         $fd_list = $this->redis->getFdList($to);
         unset($fd_list[array_search( $fd ,$fd_list)]);
@@ -67,23 +67,22 @@ class Chat extends BaseController
     	}
     }
 
-    public function send() {
-    	$fd = $this->params['fd'];
-    	$sendto = $this->params['sendto'];
-    	$msg = $this->params['msg'];
+    public function send($params) {
+    	$fd = $params['fd'];
+    	$sendto = $params['sendto'];
+    	$msg = $params['msg'];
     	$data = json_encode( array(
     		'op' => 'recv',
     		'from' => $fd,
     		'msg' => $msg
     	));
-    	$data = pack("Na*", strlen($data) , $data );
         $fd_list = $this->redis->getFdList($sendto);
         unset($fd_list[array_search( $fd ,$fd_list)]);
         $this->sendMessage( $fd_list, $data );
     }
 
-    public function getOnlineList() {
-        $fd = $this->params['fd'];
+    public function getOnlineList($params) {
+        $fd = $params['fd'];
         $fd_list = $this->redis->getFdList();
         unset($fd_list[array_search( $fd ,$fd_list)]);
         $list = array();
@@ -94,12 +93,11 @@ class Chat extends BaseController
             'op' => 'onlineList',
             'list' => $list
         ));
-        $data = pack("Na*", strlen($data) , $data );
         $this->sendMessage( array( $fd ), $data );
     }
 
     private function sendMessage( $fd_list , $msg ) {
- 		$server = $this->server->getServer();
+ 		$server = $this->server;
         $data = array(
             'ctrl' => 'Chat',
             'task' => 'sendMessage',

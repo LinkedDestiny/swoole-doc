@@ -7,7 +7,7 @@ $config =  array(
     'ctrl_path' => 'ctrl',
     'socket' => array(
         'host' => '0.0.0.0', //socket 监听ip
-        'port' => 8888, //socket 监听端口
+        'port' => 10100, //socket 监听端口
         'socket_adapter' => 'Swoole', //socket 驱动模块
         'client_class' => 'socket\\Server', //socket 回调类
         // swoole server config

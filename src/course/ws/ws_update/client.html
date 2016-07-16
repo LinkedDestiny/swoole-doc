@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</head>
+<p id="table"></p>
+<p id="test"></p>
+
+<div id="tables">
+    <h3>表一</h3>
+    <table id="table1" class="table">
+        <thead>
+            <tr>
+                <td>第一列</td>
+                <td>第二列</td>
+                <td>第三列</td>
+                <td>第四列</td>
+                <td>第五列</td>
+            </tr>
+        </thead>
+        <tbody id="tbody1">
+
+        </tbody>
+    </table>
+    <h3>表二</h3>
+    <table id="table2" class="table">
+        <thead>
+        <tr>
+            <td>第一列</td>
+            <td>第二列</td>
+            <td>第三列</td>
+            <td>第四列</td>
+            <td>第五列</td>
+        </tr>
+        </thead>
+        <tbody id="tbody2">
+
+        </tbody>
+    </table>
+    <h3>表三</h3>
+    <table id="table3" class="table">
+        <thead>
+        <tr>
+            <td>第一列</td>
+            <td>第二列</td>
+            <td>第三列</td>
+            <td>第四列</td>
+            <td>第五列</td>
+        </tr>
+        </thead>
+        <tbody id="tbody3">
+
+        </tbody>
+    </table>
+    <h3>表四</h3>
+    <table id="table4" class="table">
+        <thead>
+        <tr>
+            <td>第一列</td>
+            <td>第二列</td>
+            <td>第三列</td>
+            <td>第四列</td>
+            <td>第五列</td>
+        </tr>
+        </thead>
+        <tbody id="tbody4">
+
+        </tbody>
+    </table>
+    <h3>表五</h3>
+    <table id="table5" class="table">
+        <thead>
+        <tr>
+            <td>第一列</td>
+            <td>第二列</td>
+            <td>第三列</td>
+            <td>第四列</td>
+            <td>第五列</td>
+        </tr>
+        </thead>
+        <tbody id="tbody5">
+
+        </tbody>
+    </table>
+</div>
+<script>
+    var wsServer = 'ws://127.0.0.1:12345';
+    var websocket = new WebSocket(wsServer);
+
+    websocket.onopen = function (evt) {
+        console.log("Connected to WebSocket server.");
+        //settable(evt.data);
+        websocket.send("hello");
+    };
+    websocket.onclose = function (evt) {
+        console.log("Disconnected");
+    };
+    websocket.onmessage = function (evt) {
+        console.log('Retrieved data from server: ' + evt.data);
+        //settable(evt.data);
+        settable2(evt.data);
+    };
+    websocket.onerror = function (evt, e) {
+        console.log('Error occured: ' + evt.data);
+    };
+
+    function settable2(data) {
+        data = eval("(" + data + ")");
+        setTbody(data['table1'], "1");
+        setTbody(data['table2'], "2");
+        setTbody(data['table3'], "3");
+        setTbody(data['table4'], "4");
+        setTbody(data['table5'], "5");
+    }
+    function setTbody(data, tableNum) {
+        var tableBody = document.getElementById('tbody' + tableNum);
+        tableBody.innerHTML="";
+        for(var line in data) {
+            var newLine = document.createElement("tr");
+            for (var column in data[line]) {
+                var newColumn = document.createElement("td");
+                newColumn.innerHTML = data[line][column];
+                newLine.appendChild(newColumn);
+            }
+            tableBody.appendChild(newLine);
+        }
+    }
+</script>
+</body>
+</html>

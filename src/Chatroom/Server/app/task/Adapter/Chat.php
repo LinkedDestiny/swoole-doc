@@ -17,7 +17,7 @@ class Chat extends Task
 		$list = $this->params['list'];
 		$data = $this->params['data'];
 		foreach ($list as $fd) {
-			$this->server->send( $fd , $data );
+			$this->server->push( $fd , $data );
 		}
 	}
 }

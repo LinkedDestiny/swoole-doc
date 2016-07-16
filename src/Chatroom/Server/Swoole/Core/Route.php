@@ -11,21 +11,17 @@ use Swoole\Controller\IController,
 
 class Route
 {
-    public static function route($server)
+    public static function route($server, $socket)
     {
-        $action = Config::get('ctrl_path', 'ctrl') . '\\' . $server->getCtrl();
-        $class = Factory::getInstance($action);
-        if (!($class instanceof IController)) {
-            throw new \Exception("ctrl error");
-        }
-        $class->setServer($server);
+        $action = Config::get('ctrl_path', 'ctrl') . '\\' . $server['ctrl'];
+        $class = new $action($socket);
         $before = $class->_before();
         $view = $exception = null;
         if ($before) {
             try {
-                $method = $server->getMethod();
+                $method = $server['method'];
                 if (\method_exists($class, $method)) {
-                    $view = $class->$method();
+                    $view = $class->$method($server);
                 } else {
                     throw new \Exception("no method {$method}");
                 }
@@ -38,8 +34,8 @@ class Route
             throw $exception;
         }
         if (null === $view) {
-            return;
+            return null;
         }
-        return $server->display($view);
+        return json_encode($view, JSON_UNESCAPED_UNICODE);
     }
 }

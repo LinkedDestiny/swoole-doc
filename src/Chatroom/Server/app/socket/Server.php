@@ -29,13 +29,10 @@ class Server implements ICallback
         echo "{$fd} connected\n";
     }
 
-    public function onReceive()
+    public function onReceive($server, $frame)
     {
-        $params = func_get_args();
-        $serv = $params[0];
-        $fd = $params[1];
-        $_data = $params[3];
-        $this->parse($_data , $fd , $serv );
+        var_dump($frame->data);
+        $this->parse($frame->data , $frame->fd , $server );
     }
 
     public function onClose()
@@ -52,18 +49,14 @@ class Server implements ICallback
         $this->parse($param , $fd , $serv );
     }
 
-    private function parse(  $_data , $fd , $serv ) {
-        $jsonParser = JFactory::getInstance()->parse($_data);
-        if( $jsonParser == null ){
-            echo "getParser Error".PHP_EOL;
-            return null;
+    private function parse($data ,$fd , $serv){
+        if( !is_array($data) )
+        {
+            $data = json_decode($data, true);
         }
-        var_dump($_data);
-        $jsonParser->setFd( $fd );
-        $jsonParser->setServer($serv);
-        $result = $jsonParser->parse( $_data );
-        if( $result ) {
-            Route::route( $jsonParser );
+        $data['fd'] = $fd;
+        if( $data ) {
+            Route::route( $data , $serv);
         }
     }
 
