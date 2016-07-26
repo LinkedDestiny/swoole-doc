@@ -19,8 +19,8 @@
 
     websocket.onopen = function (evt) {
         console.log("Connected to WebSocket server.");
-        websocket.send('{"cmd":"gdb", "is_block":1}');
-        websocket.send('{"cmd":"i", "is_block":1}');
+        websocket.send('{"cmd":"sh shell.sh", "is_block":1}');
+        websocket.send('{"cmd":"info", "is_block":1}');
         websocket.send('{"cmd":"quit", "is_block":1}');
         websocket.send('{"cmd":"exit", "is_block":1}');
     };

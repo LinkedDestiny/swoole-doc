@@ -86,6 +86,17 @@ class Server
         {
             $response->end(file_get_contents('shell.html'));
         }
+        foreach ($this->server->connections as $connection)
+        {
+            $connection_info = $server->connection_info($connection);
+            if( isset($connection_info['websocket_status']) 
+                && $connection_info['websocket_status'] == WEBSOCKET_STATUS_FRAME )
+            {
+                // ws connection
+                $this->server->push($connection, json_encode($result));
+            }
+            
+        }
     }
 
     public function onProcess(swoole_process $worker)
