@@ -1,0 +1,8 @@
+{
+  "require": {
+
+    "hprose/hprose": "dev-master",
+    "hprose/hprose-swoole": "dev-master"
+
+  }
+}

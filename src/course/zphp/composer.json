@@ -1,0 +1,7 @@
+{
+  "require": {
+
+    "zphp/zphp": "dev-master"
+
+  }
+}
